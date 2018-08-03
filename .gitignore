@@ -1,2 +1,6 @@
 .vscode/
 images/
+.idea/
+
+# compiled
+*.pyc
