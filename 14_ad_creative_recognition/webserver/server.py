@@ -1,5 +1,5 @@
 import os
-from flask import Flask, flash, request, redirect, url_for, send_from_directory
+from flask import Flask, flash, request, redirect, url_for, send_from_directory, render_template
 from werkzeug.utils import secure_filename
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -32,7 +32,11 @@ def upload_file():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('uploaded_file', filename=filename))
+            # return redirect(url_for('uploaded_file', filename=filename))
+            return render_template('result.html',
+                                   uploaded=url_for('uploaded_file', filename=filename),
+                                   result=url_for('static', filename='true.jpg'))
+
     return '''
     <!doctype html>
     <title>Upload new File</title>

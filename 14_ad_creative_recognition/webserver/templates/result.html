@@ -1,0 +1,14 @@
+<!doctype html>
+<title>SuperEye</title>
+<h1>SuperEye: upload</h1>
+{% if uploaded %}
+<img src="{{ uploaded }}" />
+{% else %}
+{% endif %}
+
+<h1>SuperEye: result</h1>
+{% if result %}
+<img src="{{ result }}" />
+{% else %}
+<img src="/static/false.jpg" />
+{% endif %}
