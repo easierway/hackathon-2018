@@ -32,17 +32,20 @@ def main():
     args = parser.parse_args()
     for i in range(int(args.sidx), int(args.eidx)):
         time.sleep(1)
-        command = title_image(
-            'http://dili.bdatu.com/index.php/Share/index/id/' + str(i), str(i))
-        if not command:
-            print("address not valid. idx: [{}]".format(i))
-            continue
-        (status, output) = commands.getstatusoutput(command)
-        if (status != 0):
-            print("execute failed. command: [{}], status: [{}], output: [{}]".format(
-                command, status, output))
-        else:
-            print("execute success. command: [{}]".format(command))
+        try:
+            command = title_image(
+                'http://dili.bdatu.com/index.php/Share/index/id/' + str(i), str(i))
+            if not command:
+                print("address not valid. idx: [{}]".format(i))
+                continue
+            (status, output) = commands.getstatusoutput(command)
+            if (status != 0):
+                print("execute failed. command: [{}], status: [{}], output: [{}]".format(
+                    command, status, output))
+            else:
+                print("execute success. command: [{}]".format(command))
+        except Exception as e:
+            print(e)
 
 
 if __name__ == '__main__':
