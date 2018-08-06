@@ -16,6 +16,9 @@ Used for training and demonstrating
 
 # Install
 ```bash
+# wukong
+pip install numpy opencv-python keras tensorflow Pillow
+
 # flask
 pip install flask
 
