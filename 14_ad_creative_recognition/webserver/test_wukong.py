@@ -1,8 +1,10 @@
 import os
 import sys
-from wukong.wukong.computer_vision.TransferLearning import WuKongVisionModel
 
 sys.path.append("./wukong")
+
+from wukong.wukong.computer_vision.TransferLearning import WuKongVisionModel
+
 
 
 train_data_dir = r'wukong/samples/cat_dog/train/'
@@ -16,4 +18,5 @@ model.train_for_new_task(work_dir, task_name, train_data_dir, test_data_dir)
 
 # predict by the trained model
 ret = model.predict(os.path.join(test_data_dir, "cat", "cat.983.jpg"))
+print "predict: result"
 print ret
