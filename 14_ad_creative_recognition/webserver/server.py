@@ -1,19 +1,59 @@
+import cv2
+import logging
 import os
 from flask import Flask, flash, request, redirect, url_for, send_from_directory, render_template
+from os.path import basename, join as pjoin, dirname, realpath, splitext
 from werkzeug.utils import secure_filename
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
+# constants
+dir_path = dirname(realpath(__file__))
+UPLOAD_IMAGE_FOLDER = pjoin(dir_path, 'upload_image')
+UPLOAD_VIDEO_FOLDER = pjoin(dir_path, 'upload_video')
+TRAIN_IMAGE_FOLDER = pjoin(dir_path, 'train_image')
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'avi'}
 
-UPLOAD_FOLDER = os.path.join(dir_path, 'uploads')
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+# logging
+logging.basicConfig(level=logging.DEBUG,
+            format='%(asctime)s %(levelname)s %(message)s',
+            datefmt='%d-%H:%M:%S',
+            filename=None,
+            filemode='w')
 
+# flask
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def pick_frame(inPath, outPath, num=1):
+    logging.debug("pick frame:%r, out path:%r", inPath, outPath)
+    frame_list = []
+    videoName = basename(inPath)
+    videoPath = dirname(inPath)
+
+    videoCapture = cv2.VideoCapture()
+    videoCapture.open(inPath)
+    fps = videoCapture.get(cv2.CAP_PROP_FPS)
+    frames = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
+    if -1 == num or  num > frames:
+        num = frames
+    for i in range(int(num)):
+        ret,frame = videoCapture.read()
+        if ret is True:
+            frame_save_path = "%s/%s-frame-%d.jpg" % (outPath, videoName, i)
+            cv2.imwrite(frame_save_path, frame)
+            frame_list.append(frame_save_path)
+            logging.info("pick frame save %r", frame_save_path)
+
+    return frame_list
+
+
+def is_video(filename):
+    _, extension = splitext(filename)
+    return extension in (".mp4", ".avi")
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -31,7 +71,20 @@ def upload_file():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # video
+            if is_video(filename):
+                upload_save_path = pjoin(UPLOAD_VIDEO_FOLDER, filename)
+                file.save(pjoin(upload_save_path))
+                logging.debug("video save %r", upload_save_path)
+                frames = pick_frame(upload_save_path, UPLOAD_IMAGE_FOLDER)
+                if len(frames) > 0:
+                    # TODO: return predict picture
+                    filename = basename(frames[0])
+            else:
+                upload_save_path = pjoin(UPLOAD_IMAGE_FOLDER, filename)
+                file.save(pjoin(upload_save_path))
+                logging.debug("image save %r", upload_save_path)
+
             # return redirect(url_for('uploaded_file', filename=filename))
             return render_template('result.html',
                                    uploaded=url_for('uploaded_file', filename=filename),
@@ -48,6 +101,7 @@ def upload_file():
     '''
 
 
-@app.route('/uploads/<filename>')
+@app.route('/upload_image/<filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(UPLOAD_IMAGE_FOLDER, filename)
+
