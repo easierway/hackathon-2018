@@ -14,22 +14,22 @@ def combine(oimage, logo_path, eimage, scale):
     logo = cv2.resize(logo, (0, 0), fx=scale, fy=scale,
                       interpolation=cv2.INTER_NEAREST)
     logo_gray = cv2.cvtColor(logo, cv2.COLOR_BGR2GRAY)
-    _, logo_mask = cv2.threshold(
+    _, logo_mask0 = cv2.threshold(
         logo_gray, 254, 255, cv2.THRESH_BINARY)
-    logo_mask1 = cv2.bitwise_not(logo_mask)
+    logo_mask1 = cv2.bitwise_not(logo_mask0)
 
     img = cv2.imread(oimage, cv2.IMREAD_COLOR)
-    lrows, lcols, lchan = logo.shape
-    irows, icols, ichan = img.shape
+    lrows, lcols, _ = logo.shape
+    irows, icols, _ = img.shape
     x = random.randint(0, irows - lrows)
     y = random.randint(0, icols - irows)
 
-    img_roi = img[x: x + lrows, y: y + lcols].copy()
-    img_res0 = cv2.bitwise_and(img_roi, img_roi, mask=logo_mask)
-    img_res1 = cv2.bitwise_and(logo, logo, mask=logo_mask1)
-    img_res2 = cv2.add(img_res0, img_res1)
-    img_res2 = cv2.medianBlur(img_res2, 1)
-    img[x: x + lrows, y: y + lcols] = img_res2[:, :]
+    cimg = img[x: x + lrows, y: y + lcols].copy()
+    cimg_and = cv2.bitwise_and(cimg, cimg, mask=logo_mask0)
+    logo_and = cv2.bitwise_and(logo, logo, mask=logo_mask1)
+    cimg_logo = cv2.add(cimg_and, logo_and)
+    cimg_logo = cv2.medianBlur(cimg_logo, 1)
+    img[x: x + lrows, y: y + lcols] = cimg_logo[:, :]
     cv2.imwrite(eimage, img)
 
 
