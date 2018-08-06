@@ -21,7 +21,8 @@ def title_image(url_address, prefix):
 
     if len(image) == 0 or len(title) == 0:
         return ''
-    return 'wget {1} -O "images/{2}_{0}.JPG"'.format(title[0], image[0], prefix)
+    return 'wget {} -O "oimages/{}.jpg"'.format(image[0], prefix)
+    # return 'wget {1} -O "oimages/{2}_{0}.jpg"'.format(title[0], image[0], prefix)
 
 
 def main():
