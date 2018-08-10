@@ -1,9 +1,14 @@
 import cv2
 import logging
 import os
+import sys
 from flask import Flask, flash, request, redirect, url_for, send_from_directory, render_template
 from os.path import basename, join as pjoin, dirname, realpath, splitext
 from werkzeug.utils import secure_filename
+
+sys.path.append("./wukong")
+from wukong.wukong.computer_vision.TransferLearning import WuKongVisionModel
+
 
 # constants
 dir_path = dirname(realpath(__file__))
@@ -23,9 +28,36 @@ logging.basicConfig(level=logging.DEBUG,
 app = Flask(__name__)
 
 
+# wukong
+class WuKong:
+    def __init__(self):
+        self.train_data_dir = r'wukong/samples/cat_dog/train/'
+        self.test_data_dir = r'wukong/samples/cat_dog/test'
+        self.work_dir = r'./tmp'
+        self.task_name = "cat_dog"
+        self.model = WuKongVisionModel()
+
+
+    def train(self):
+        '''train a model with the default configuration'''
+        self.model.train_for_new_task(self.work_dir, self.task_name, self.train_data_dir, self.test_data_dir)
+
+
+    def predict(self, filepath):
+        '''predict by the trained model'''
+        ret = self.model.predict(pjoin(self.test_data_dir, "cat", "cat.983.jpg"))
+        return ret
+
+
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def is_video(filename):
+    _, extension = splitext(filename)
+    return extension in (".mp4", ".avi")
 
 
 def pick_frame(inPath, outPath, num=1):
@@ -49,11 +81,6 @@ def pick_frame(inPath, outPath, num=1):
             logging.info("pick frame save %r", frame_save_path)
 
     return frame_list
-
-
-def is_video(filename):
-    _, extension = splitext(filename)
-    return extension in (".mp4", ".avi")
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -80,10 +107,14 @@ def upload_file():
                 if len(frames) > 0:
                     # TODO: return predict picture
                     filename = basename(frames[0])
+                    predict = app.wukong.predict(frames[0])
+                    logging.info("predict frame %r = %r", predict, frames[0])
             else:
                 upload_save_path = pjoin(UPLOAD_IMAGE_FOLDER, filename)
-                file.save(pjoin(upload_save_path))
+                file.save(upload_save_path)
                 logging.debug("image save %r", upload_save_path)
+                predict = app.wukong.predict(upload_save_path)
+                logging.info("predict image %r = %r", predict, upload_save_path)
 
             # return redirect(url_for('uploaded_file', filename=filename))
             return render_template('result.html',
@@ -104,4 +135,13 @@ def upload_file():
 @app.route('/upload_image/<filename>')
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_IMAGE_FOLDER, filename)
+
+
+if __name__ == '__main__':
+    wukong = WuKong()
+    wukong.train()
+    wukong.predict("")
+
+    app.wukong = wukong
+    app.run(host='0.0.0.0',port=5000)
 
