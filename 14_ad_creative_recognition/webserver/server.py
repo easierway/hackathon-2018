@@ -1,13 +1,15 @@
 import cv2
 import logging
 import os
+import subprocess
 import sys
 from flask import Flask, flash, request, redirect, url_for, send_from_directory, render_template
 from os.path import basename, join as pjoin, dirname, realpath, splitext
 from werkzeug.utils import secure_filename
 
-sys.path.append("./wukong")
-from wukong.wukong.computer_vision.TransferLearning import WuKongVisionModel
+# use system wukong
+# sys.path.append("./wukong")
+# from wukong.computer_vision.TransferLearning import WuKongVisionModel
 
 
 # constants
@@ -30,12 +32,10 @@ app = Flask(__name__)
 
 # wukong
 class WuKong:
-    def __init__(self):
-        self.train_data_dir = r'wukong/samples/cat_dog/train/'
-        self.test_data_dir = r'wukong/samples/cat_dog/test'
-        self.work_dir = r'./tmp'
-        self.task_name = "cat_dog"
-        self.model = WuKongVisionModel()
+    def __init__(self, size, weight):
+        self.wukong_dir = ""
+        self.model = WuKongVisionModel(size, size)
+        self.model.load_weights(weight)
 
 
     def train(self):
@@ -45,9 +45,8 @@ class WuKong:
 
     def predict(self, filepath):
         '''predict by the trained model'''
-        ret = self.model.predict(pjoin(self.test_data_dir, "cat", "cat.983.jpg"))
+        ret = self.model.predict(filepath)
         return ret
-
 
 
 def allowed_file(filename):
@@ -98,28 +97,36 @@ def upload_file():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
+            result_image = 'false.jpg'
+            predict = -1
+
             # video
             if is_video(filename):
                 upload_save_path = pjoin(UPLOAD_VIDEO_FOLDER, filename)
                 file.save(pjoin(upload_save_path))
                 logging.debug("video save %r", upload_save_path)
                 frames = pick_frame(upload_save_path, UPLOAD_IMAGE_FOLDER)
-                if len(frames) > 0:
-                    # TODO: return predict picture
-                    filename = basename(frames[0])
-                    predict = app.wukong.predict(frames[0])
-                    logging.info("predict frame %r = %r", predict, frames[0])
+                for f in frames:
+                    filename = basename(f)
+                    predict = subprocess.call(['python', 'wukong_check.py', '-p', f])
+                    logging.info("predict frame %r = %r", predict, f)
+                    if predict == 0:
+                        break
             else:
                 upload_save_path = pjoin(UPLOAD_IMAGE_FOLDER, filename)
                 file.save(upload_save_path)
                 logging.debug("image save %r", upload_save_path)
-                predict = app.wukong.predict(upload_save_path)
+                # predict = app.wukong.predict(upload_save_path)
+                predict = subprocess.call(['python', 'wukong_check.py', '-p', upload_save_path])
                 logging.info("predict image %r = %r", predict, upload_save_path)
+
+            if predict == 0:
+                result_image = 'true.jpg'
 
             # return redirect(url_for('uploaded_file', filename=filename))
             return render_template('result.html',
                                    uploaded=url_for('uploaded_file', filename=filename),
-                                   result=url_for('static', filename='true.jpg'))
+                                   result=url_for('static', filename=result_image))
 
     return '''
     <!doctype html>
@@ -138,10 +145,9 @@ def uploaded_file(filename):
 
 
 if __name__ == '__main__':
-    wukong = WuKong()
-    wukong.train()
-    wukong.predict("")
-
-    app.wukong = wukong
+    #size = 224
+    #weight = '/home/ec2-user/src/wukong/tmp/douyin_448.combined_model_weightsacc0.90_val_acc0.99.best.hdf5'
+    #wukong = WuKong(size, weight)
+    #app.wukong = wukong
     app.run(host='0.0.0.0',port=5000)
 

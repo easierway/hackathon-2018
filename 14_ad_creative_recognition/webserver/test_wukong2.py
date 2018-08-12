@@ -29,3 +29,6 @@ ret = new_model.predict(os.path.join(test_data_dir, "5789.jpg"))
 print ret
 ret = new_model.predict('/home/ec2-user/training-set/train/origin/5789.jpg')
 print ret
+ret = new_model.predict('/home/ec2-user/src/leon-hackathon-2018/14_ad_creative_recognition/webserver/upload_image/5789_2.jpg')
+print ret
+
