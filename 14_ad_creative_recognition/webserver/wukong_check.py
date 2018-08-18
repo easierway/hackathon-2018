@@ -25,7 +25,7 @@ if __name__ == "__main__":
                         default='/home/ec2-user/src/wukong/tmp/douyin_672.combined_model_weightsacc0.921_val_acc0.993.best.hdf5', help='weight (optional)')
     parser.add_argument('-p', type=str, dest='image', help='picture')
     args = parser.parse_args()
-    logger.debug("%s", args)
+    #logger.debug("%s", args)
     if args.image is None:
         parser.print_help()
         sys.exit(2)
