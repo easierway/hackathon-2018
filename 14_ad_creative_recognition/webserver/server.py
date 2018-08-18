@@ -64,7 +64,6 @@ def pick_frame(inPath, outPath, num=5):
     logging.debug("pick frame:%r, out path:%r", inPath, outPath)
     frame_list = []
     videoName = basename(inPath)
-    videoPath = dirname(inPath)
 
     videoCapture = cv2.VideoCapture()
     videoCapture.open(inPath)
@@ -94,6 +93,7 @@ def index():
 
 @app.route('/recognition', methods=['POST'])
 def recognition():
+    print(request.form["imageUrl"])
     if 'file' not in request.files:
         flash('No file part')
         return redirect(request.url)
@@ -103,9 +103,7 @@ def recognition():
         return redirect(request.url)
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        result_image = 'false.jpg'
         predict = -1
-
         # video
         size_700 = "700"
         size_672 = "672"

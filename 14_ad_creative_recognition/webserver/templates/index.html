@@ -47,12 +47,9 @@
             </label>
           </div>
           <div class="col-md-4 col-6">
-            <input type="text" class="form-control form-control-lg" placeholder="" id="imageUrl">
+            <input type="text" class="form-control" name="imageUrl" placeholder="" id="imageUrl">
           </div>
           <div class="col-md-4 col-3  ml-auto mr-auto">
-            <!-- <label class="btn btn-white btn-raised btn-fab btn-round" id="searchBtn">
-              <i class="material-icons">search</i>
-            </label> -->
             <button type="submit" class="btn btn-white btn-raised btn-fab btn-round">
               <i class="material-icons">search</i>
             </button>
@@ -121,6 +118,7 @@
           $('#photoFrame').attr('src', src);
           $('#photoFrame').removeClass("d-none");
         }
+        $('#imageUrl').val("");
       });
 
       $('#recognitionForm').on('submit', (function (e) {
@@ -152,6 +150,26 @@
             console.log(data);
           }
         });
+
+        if ($('#imageUrl').val().trim() !== '') {
+          var filePath = $('#imageUrl').val().trim();
+          var fileFormat = filePath.substring(filePath.lastIndexOf(".")).toLowerCase();
+          var src = filePath;
+          if (!fileFormat.match(/.png|.jpg|.jpeg|.gif|.mp4|.avi|.mov/)) {
+            $('#unspportFormat').modal();
+            return;
+          }
+          $('#cardBody').addClass("d-none");
+          if (fileFormat.match(/.mp4|.avi|.mov/)) {
+            $('#photoFrame').addClass("d-none");
+            $('#videoFrame').attr('src', src);
+            $('#videoFrame').removeClass("d-none");
+          } else {
+            $('#videoFrame').addClass("d-none");
+            $('#photoFrame').attr('src', src);
+            $('#photoFrame').removeClass("d-none");
+          }
+        }
       }));
     });
   </script>
