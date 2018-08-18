@@ -78,7 +78,7 @@
           <h5 class="modal-title">Warnning</h5>
         </div>
         <div class="modal-body">
-          <p>only support image format: png/jpg/jpeg</p>
+          <p>only support image format: png/jpg/jpeg/gif/mp4/avi/mov</p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
@@ -106,7 +106,7 @@
         var filePath = $(this).val();
         var fileFormat = filePath.substring(filePath.lastIndexOf(".")).toLowerCase();
         var src = window.URL.createObjectURL(this.files[0]);
-        if (!fileFormat.match(/.png|.jpg|.jpeg/)) {
+        if (!fileFormat.match(/.png|.jpg|.jpeg|.gif|.mp4|.avi|.mov/)) {
           $('#unspportFormat').modal();
           return;
         }
