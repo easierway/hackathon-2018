@@ -149,6 +149,7 @@
               $('#modal').modal();
               return;
             }
+            clearInterval(tid);
             if (data["recognition"]) {
               $('#result').text("PASS");
               $('.card').removeClass("bg-danger");
@@ -160,7 +161,6 @@
               $('.card').removeClass("bg-success");
               $('.card').addClass("bg-danger");
             }
-            clearInterval(tid);
           },
           error: function (jqXHR, textStatus, errorThrown) {
             $('#modalBody').html("server error: [" + errorThrown + "]");
