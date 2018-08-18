@@ -8,11 +8,6 @@ from os.path import basename, join as pjoin, dirname, realpath, splitext
 from werkzeug.utils import secure_filename
 import json
 
-# use system wukong
-# sys.path.append("./wukong")
-# from wukong.computer_vision.TransferLearning import WuKongVisionModel
-
-
 # constants
 dir_path = dirname(realpath(__file__))
 UPLOAD_IMAGE_FOLDER = pjoin(dir_path, 'upload_image')
@@ -184,8 +179,6 @@ def recognition():
                     ['python', 'wukong_check.py', '-p', upload_save_path, '-w', weight_224, '-s', size_224])
                 logging.info("predict frame %s = %r,size = %r",
                              predict, upload_save_path, size_224)
-        if predict == 0:
-            result_image = 'true.jpg'
     return json.dumps({
         "status": 0,
         "recognition": predict == 0

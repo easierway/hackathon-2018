@@ -124,6 +124,11 @@
       $('#recognitionForm').on('submit', (function (e) {
         e.preventDefault();
         var formData = new FormData(this);
+        $('#cardBody').removeClass("d-none");
+        var stop = false;
+        var tid = setInterval(function () {
+          $('#result').text(Math.random());
+        }, 100);
         $.ajax({
           type: 'POST',
           url: "/recognition",
@@ -143,11 +148,12 @@
             } else {
               $('#result').text("FAIL");
             }
-            $('#cardBody').removeClass("d-none");
+            clearInterval(tid);
           },
           error: function (data) {
             console.log("error");
             console.log(data);
+            clearInterval(tid);
           }
         });
 
