@@ -80,6 +80,10 @@ def pick_frame(inPath, outPath, num=5):
             frame_list.append(frame_save_path)
             logging.info("pick frame save %r", frame_save_path)
 
+    if len(frame_list) > 1:
+        # skip 1st frame
+        frame_list.pop(0)
+
     return frame_list
 
 
