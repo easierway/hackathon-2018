@@ -17,7 +17,7 @@ dir_path = dirname(realpath(__file__))
 UPLOAD_IMAGE_FOLDER = pjoin(dir_path, 'upload_image')
 UPLOAD_VIDEO_FOLDER = pjoin(dir_path, 'upload_video')
 TRAIN_IMAGE_FOLDER = pjoin(dir_path, 'train_image')
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'avi'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'avi', 'mov'}
 
 # logging
 logging.basicConfig(level=logging.DEBUG,
@@ -50,16 +50,17 @@ class WuKong:
 
 
 def allowed_file(filename):
+    logging.debug("check allowed file %r", filename)
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def is_video(filename):
     _, extension = splitext(filename)
-    return extension in (".mp4", ".avi")
+    return extension in (".mp4", ".MP4", ".avi", ".AVI", ".MOV", ".mov")
 
 
-def pick_frame(inPath, outPath, num=1):
+def pick_frame(inPath, outPath, num=5):
     logging.debug("pick frame:%r, out path:%r", inPath, outPath)
     frame_list = []
     videoName = basename(inPath)
@@ -101,6 +102,16 @@ def upload_file():
             predict = -1
 
             # video
+            size_700="700"
+            size_672="672"
+            size_448="448"
+            size_300="300"
+            size_224="224"
+            weight_700="/home/ec2-user/src/wukong/tmp/douyin_700.top_weights.best.hdf5"
+            weight_672="/home/ec2-user/src/wukong/tmp/douyin_672.combined_model_weightsacc0.921_val_acc0.993.best.hdf5"
+            weight_448="/home/ec2-user/src/wukong/tmp/douyin_448.combined_model_weightsacc0.90_val_acc0.99.best.hdf5"
+            weight_300="/home/ec2-user/src/wukong/tmp/douyin_300.combined_model_weightsacc0.85_val_acc0.96.best.hdf5"
+            weight_224="/home/ec2-user/src/wukong/tmp/douyin_224.combined_model_weightsacc0.83_val_acc0.92.best.hdf5"
             if is_video(filename):
                 upload_save_path = pjoin(UPLOAD_VIDEO_FOLDER, filename)
                 file.save(pjoin(upload_save_path))
@@ -108,8 +119,25 @@ def upload_file():
                 frames = pick_frame(upload_save_path, UPLOAD_IMAGE_FOLDER)
                 for f in frames:
                     filename = basename(f)
-                    predict = subprocess.call(['python', 'wukong_check.py', '-p', f])
-                    logging.info("predict frame %r = %r", predict, f)
+                    #predict = subprocess.call(['python', 'wukong_check.py', '-p', f]) # -w 672 -s 672
+                    predict = subprocess.call(['python', 'wukong_check.py', '-p', f, '-w',weight_672,'-s',size_672])
+                    logging.info("predict frame %s = %r,size = %r", predict, f,size_672)
+                    if predict == 0:
+                        break
+                    predict = subprocess.call(['python', 'wukong_check.py', '-p', f, '-w',weight_700,'-s',size_700]) 
+                    logging.info("predict frame %s = %r,size = %r", predict, f,size_700)
+                    if predict == 0:
+                        break
+                    predict = subprocess.call(['python', 'wukong_check.py', '-p', f, '-w',weight_448,'-s',size_448])
+                    logging.info("predict frame %s = %r,size = %r", predict, f,size_448)
+                    if predict == 0:
+                        break 
+                    predict = subprocess.call(['python', 'wukong_check.py', '-p', f, '-w',weight_300,'-s',size_300])
+                    logging.info("predict frame %s = %r,size = %r", predict, f,size_300)
+                    if predict == 0:
+                        break
+                    predict = subprocess.call(['python', 'wukong_check.py', '-p', f, '-w',weight_224,'-s',size_224])
+                    logging.info("predict frame %s = %r,size = %r", predict, f,size_300)
                     if predict == 0:
                         break
             else:
@@ -117,9 +145,22 @@ def upload_file():
                 file.save(upload_save_path)
                 logging.debug("image save %r", upload_save_path)
                 # predict = app.wukong.predict(upload_save_path)
-                predict = subprocess.call(['python', 'wukong_check.py', '-p', upload_save_path])
-                logging.info("predict image %r = %r", predict, upload_save_path)
-
+                #predict = subprocess.call(['python', 'wukong_check.py', '-p', upload_save_path]) # -w 226 -s 226
+                #logging.info("predict image %s = %r", predict, upload_save_path)
+                predict = subprocess.call(['python', 'wukong_check.py', '-p', upload_save_path, '-w',weight_672, '-s',size_672])
+                logging.info("predict frame %s = %r,size = %r", predict, upload_save_path,size_672)
+                if predict != 0:
+                    predict = subprocess.call(['python', 'wukong_check.py', '-p', upload_save_path, '-w',weight_700,'-s',size_700])
+                    logging.info("predict frame %s = %r,size = %r", predict, upload_save_path,size_700)
+                if predict != 0:
+                    predict = subprocess.call(['python', 'wukong_check.py', '-p', upload_save_path, '-w',weight_448,'-s',size_448])
+                    logging.info("predict frame %s = %r,size = %r", predict, upload_save_path,size_448)
+                if predict != 0:
+                    predict = subprocess.call(['python', 'wukong_check.py', '-p', upload_save_path, '-w',weight_300,'-s',size_300])
+                    logging.info("predict frame %s = %r,size = %r", predict, upload_save_path,size_300)
+                if predict != 0:
+                    predict = subprocess.call(['python', 'wukong_check.py', '-p', upload_save_path, '-w',weight_224,'-s',size_224])
+                    logging.info("predict frame %s = %r,size = %r", predict, upload_save_path, size_224)
             if predict == 0:
                 result_image = 'true.jpg'
 
