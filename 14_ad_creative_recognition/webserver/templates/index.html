@@ -26,13 +26,13 @@
   </style>
 </head>
 
-<body class="h-100 index-page sidebar-collapse bg-primary">
+<body class="h-100 index-page sidebar-collapse bg-info">
   <div class="h-100 container">
     <div class="row h-25">
       <div class="col">
         <div class="brand">
           <h1>Super eye</h1>
-          <h3>advertising creative recognition system</h3>
+          <h3>advertising creative recognition</h3>
         </div>
       </div>
     </div>
@@ -62,7 +62,7 @@
       <div class="col-md-6 col-6">
         <div class="card text-center">
           <div class="card-body d-none" id="cardBody">
-            <h4 class="card-title" id="result">PASS</h4>
+            <h4 class="card-title" id="result">UNKNOWN</h4>
           </div>
           <img class="card-img-bottom d-none" id="photoFrame" />
           <video class="card-img-bottom d-none" controls="controls" autoplay="false" id="videoFrame" />
@@ -110,6 +110,9 @@
           return;
         }
         $('#cardBody').addClass("d-none");
+        $('.card').removeClass("bg-success");
+        $('.card').removeClass("bg-danger");
+        $('.card').removeClass("bg-warning");
         if (fileFormat.match(/.mp4|.avi|.mov/)) {
           $('#photoFrame').addClass("d-none");
           $('#videoFrame').attr('src', src);
@@ -126,7 +129,6 @@
         e.preventDefault();
         var formData = new FormData(this);
         $('#cardBody').removeClass("d-none");
-        var stop = false;
         var tid = setInterval(function () {
           $('#result').text(Math.random());
         }, 100);
@@ -146,8 +148,14 @@
             }
             if (data["recognition"]) {
               $('#result').text("PASS");
+              $('.card').removeClass("bg-danger");
+              $('.card').removeClass("bg-warning");
+              $('.card').addClass("bg-success");
             } else {
               $('#result').text("FAIL");
+              $('.card').removeClass("bg-warning");
+              $('.card').removeClass("bg-success");
+              $('.card').addClass("bg-danger");
             }
             clearInterval(tid);
           },
@@ -155,6 +163,10 @@
             $('#modalBody').html("server error: [" + errorThrown + "]");
             $('#modal').modal();
             clearInterval(tid);
+            $('#result').text("UNKNOWN");
+            $('.card').removeClass("bg-success");
+            $('.card').removeClass("bg-danger");
+            $('.card').addClass("bg-warning");
           }
         });
 
