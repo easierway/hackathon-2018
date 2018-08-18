@@ -66,7 +66,8 @@
         <div class="card-body d-none" id="cardBody">
           <h4 class="card-title" id="result">PASS</h4>
         </div>
-        <img class="card-img-bottom" src="" alt="" id="photoFrame" />
+        <img class="card-img-bottom d-none" id="photoFrame" />
+        <video class="card-img-bottom d-none" controls="controls" autoplay="false" id="videoFrame" />
       </div>
     </div>
   </div>
@@ -111,7 +112,15 @@
           return;
         }
         $('#cardBody').addClass("d-none");
-        $('#photoFrame').attr('src', src);
+        if (fileFormat.match(/.mp4|.avi|.mov/)) {
+          $('#photoFrame').addClass("d-none");
+          $('#videoFrame').attr('src', src);
+          $('#videoFrame').removeClass("d-none");
+        } else {
+          $('#videoFrame').addClass("d-none");
+          $('#photoFrame').attr('src', src);
+          $('#photoFrame').removeClass("d-none");
+        }
       });
 
       $('#recognitionForm').on('submit', (function (e) {
