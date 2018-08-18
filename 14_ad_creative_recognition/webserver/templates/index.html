@@ -49,7 +49,7 @@
           <div class="col-md-4 col-6">
             <input type="text" class="form-control" name="imageUrl" placeholder="" id="imageUrl">
           </div>
-          <div class="col-md-4 col-3  ml-auto mr-auto">
+          <div class="col-md-4 col-3 ml-auto mr-auto">
             <button type="submit" class="btn btn-white btn-raised btn-fab btn-round">
               <i class="material-icons">search</i>
             </button>
@@ -58,13 +58,15 @@
       </form>
     </div>
 
-    <div class="row h-40 align-items-center justify-content-center">
-      <div class="card text-center" style="width: 20rem;">
-        <div class="card-body d-none" id="cardBody">
-          <h4 class="card-title" id="result">PASS</h4>
+    <div class="row h-50 align-items-center justify-content-center">
+      <div class="col-md-6 col-6">
+        <div class="card text-center">
+          <div class="card-body d-none" id="cardBody">
+            <h4 class="card-title" id="result">PASS</h4>
+          </div>
+          <img class="card-img-bottom d-none" id="photoFrame" />
+          <video class="card-img-bottom d-none" controls="controls" autoplay="false" id="videoFrame" />
         </div>
-        <img class="card-img-bottom d-none" id="photoFrame" />
-        <video class="card-img-bottom d-none" controls="controls" autoplay="false" id="videoFrame" />
       </div>
     </div>
   </div>
