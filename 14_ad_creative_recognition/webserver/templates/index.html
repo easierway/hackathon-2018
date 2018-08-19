@@ -157,7 +157,7 @@
           dataType: "json",
           success: function (data) {
             if (data["status"] != 0) {
-              $('#modalBody').html("server status is not ok. [" + data + "]");
+              $('#modalBody').html("server status[" + data["status"] + "] is not ok. message: [" + data["message"] + "]");
               $('#modal').modal();
               return;
             }
