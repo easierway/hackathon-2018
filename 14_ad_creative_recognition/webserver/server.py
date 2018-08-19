@@ -30,39 +30,23 @@ logging.basicConfig(level=logging.DEBUG,
                     filename=None,
                     filemode='w')
 
-models = []
-
-
-def init_model():
-    weights = [
-        # (700, "/home/ec2-user/src/wukong/tmp/douyin_700.top_weights.best.hdf5"),
-        (672, "/home/ec2-user/src/wukong/tmp/douyin_672.combined_model_weightsacc0.938_val_acc0.948.best.hdf5"),
-        (448, "/home/ec2-user/src/wukong/tmp/douyin_448.combined_model_weightsacc0.90_val_acc0.99.best.hdf5"),
-        # (300, "/home/ec2-user/src/wukong/tmp/douyin_300.combined_model_weightsacc0.85_val_acc0.96.best.hdf5"),
-        (224, "/home/ec2-user/src/wukong/tmp/douyin_224.combined_model_weightsacc0.83_val_acc0.92.best.hdf5"),
-    ]
-
-    for _ in range(0, len(weights)):
-        models.append(0)
-    idx = 0
-    for size, weight in weights:
-        models[idx] = WuKongVisionModel(size, size)
-        models[idx].load_weights(weight)
-        idx += 1
+addresses = [
+    "http://127.0.0.1:5700",
+    "http://127.0.0.1:5672",
+    "http://127.0.0.1:5448",
+    "http://127.0.0.1:5300",
+    "http://127.0.0.1:5224",
+]
 
 
 def predict(image):
-    # for model in models:
-    for i in range(0, len(models)):
-        try:
-            possibilty = models[i].predict(image)[0]
-            logging.info(
-                "predict [{}], possibility [{}]".format(image, possibilty))
-            if possibilty < 0.5:
-                return True
-        except Exception as e:
-            logging.exception(e)
-            continue
+    for address in addresses:
+        response = urllib2.urlopen(address)
+        obj = json.loads(response.read())
+        logging.info("predict [{}] [{}] [{}] [{}]".format(
+            address, image, obj["value"], obj))
+        if "status" in obj and obj["status"] == 0 and obj["recognition"] == 1:
+            return True
     return False
 
 
