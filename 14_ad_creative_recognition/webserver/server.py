@@ -41,12 +41,15 @@ addresses = [
 
 def predict(image):
     for address in addresses:
-        response = urllib2.urlopen("{}?image={}".format(address, image))
-        obj = json.loads(response.read())
-        logging.info("predict [{}] [{}] [{}] [{}]".format(
-            address, image, obj["value"], obj))
-        if "status" in obj and obj["status"] == 0 and obj["recognition"] == 1:
-            return True
+        try:
+            response = urllib2.urlopen("{}?image={}".format(address, image))
+            obj = json.loads(response.read())
+            logging.info("predict [{}] [{}] [{}] [{}]".format(
+                address, image, obj["value"], obj))
+            if "status" in obj and obj["status"] == 0 and obj["recognition"] == 1:
+                return True
+        except Exception as e:
+            logging.exception(e)
     return False
 
 
@@ -167,5 +170,4 @@ def after_request(response):
 
 
 if __name__ == '__main__':
-    init_model()
     app.run(host='0.0.0.0', port=5000)
