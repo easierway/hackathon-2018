@@ -49,9 +49,10 @@ def init_model():
 
 
 def predict(image):
-    for model in models:
+    # for model in models:
+    for i in range(0, len(models)):
         try:
-            possibilty = model.predict(image)[0]
+            possibilty = models[i].predict(image)[0]
             logging.info(
                 "predict [{}], possibility [{}]".format(image, possibilty))
             if possibilty < 0.5:
