@@ -40,14 +40,15 @@ addresses = [
 
 
 def predict(image):
+    isPass = False
     for address in addresses:
         response = urllib2.urlopen("{}?image={}".format(address, image))
         obj = json.loads(response.read())
         logging.info("predict [{}] [{}] [{}] [{}]".format(
             address, image, obj["value"], obj))
         if "status" in obj and obj["status"] == 0 and obj["recognition"] == 1:
-            return True
-    return False
+            isPass = True
+    return isPass
 
 
 def download(url, output="./upload_image"):
