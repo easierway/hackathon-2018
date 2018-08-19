@@ -41,9 +41,12 @@ def init_model():
         # (300, "/home/ec2-user/src/wukong/tmp/douyin_300.combined_model_weightsacc0.85_val_acc0.96.best.hdf5"),
         (224, "/home/ec2-user/src/wukong/tmp/douyin_224.combined_model_weightsacc0.83_val_acc0.92.best.hdf5"),
     ]
+
+    for _ in range(0, len(weights)):
+        models.append(0)
     idx = 0
     for size, weight in weights:
-        models.append(WuKongVisionModel(size, size))
+        models[idx] = WuKongVisionModel(size, size)
         models[idx].load_weights(weight)
         idx += 1
 
