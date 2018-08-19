@@ -160,6 +160,10 @@
               $('#modalBody').html("server status[" + data["status"] + "] is not ok. message: [" + data["message"] + "]");
               $('#modal').modal();
               clearInterval(tid);
+              $('#result').text("UNKNOWN");
+              $('.card').removeClass("bg-success");
+              $('.card').removeClass("bg-danger");
+              $('.card').addClass("bg-warning");
               window.isDoing = false;
               return;
             }
