@@ -36,7 +36,7 @@ models = []
 def init_model():
     weights = [
         ("700", "/home/ec2-user/src/wukong/tmp/douyin_700.top_weights.best.hdf5"),
-        ("672", "/home/ec2-user/src/wukong/tmp/douyin_672.combined_model_weightsacc0.921_val_acc0.993.best.hdf5"),
+        ("672", "/home/ec2-user/src/wukong/tmp/douyin_672.combined_model_weightsacc0.938_val_acc0.948.best.hdf5"),
         ("448", "/home/ec2-user/src/wukong/tmp/douyin_448.combined_model_weightsacc0.90_val_acc0.99.best.hdf5"),
         ("300", "/home/ec2-user/src/wukong/tmp/douyin_300.combined_model_weightsacc0.85_val_acc0.96.best.hdf5"),
         ("224", "/home/ec2-user/src/wukong/tmp/douyin_224.combined_model_weightsacc0.83_val_acc0.92.best.hdf5"),
