@@ -1,3 +1,5 @@
 /wukong/
 upload_image/
 upload_video/
+*.log
+nohup.out
