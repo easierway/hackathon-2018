@@ -142,7 +142,7 @@
           return;
         }
 
-        if ($('#imageUrl').val().trim() !== '' && $('#imageUploader').val() === '') {
+        if ($('#imageUrl').val().trim() !== '') {
           var filePath = $('#imageUrl').val().trim();
           var fileFormat = filePath.substring(filePath.lastIndexOf(".")).toLowerCase();
           var src = filePath;
