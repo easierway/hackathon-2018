@@ -41,7 +41,7 @@ addresses = [
 
 def predict(image):
     for address in addresses:
-        response = urllib2.urlopen(address)
+        response = urllib2.urlopen("{}?image={}".format(address, image))
         obj = json.loads(response.read())
         logging.info("predict [{}] [{}] [{}] [{}]".format(
             address, image, obj["value"], obj))
