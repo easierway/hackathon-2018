@@ -41,15 +41,12 @@ addresses = [
 
 def predict(image):
     for address in addresses:
-        try:
-            response = urllib2.urlopen("{}?image={}".format(address, image))
-            obj = json.loads(response.read())
-            logging.info("predict [{}] [{}] [{}] [{}]".format(
-                address, image, obj["value"], obj))
-            if "status" in obj and obj["status"] == 0 and obj["recognition"] == 1:
-                return True
-        except Exception as e:
-            logging.exception(e)
+        response = urllib2.urlopen("{}?image={}".format(address, image))
+        obj = json.loads(response.read())
+        logging.info("predict [{}] [{}] [{}] [{}]".format(
+            address, image, obj["value"], obj))
+        if "status" in obj and obj["status"] == 0 and obj["recognition"] == 1:
+            return True
     return False
 
 
