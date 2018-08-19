@@ -136,11 +136,32 @@
           $('#modal').modal();
           return;
         }
-        if ($('#imageUrl').val() === '' && $('#imageUploader').val() === '') {
+        if ($('#imageUrl').val().trim() === '' && $('#imageUploader').val() === '') {
           $('#modalBody').html("<p>it seems that you forgot upload image</p>")
           $('#modal').modal();
           return;
         }
+
+        if ($('#imageUrl').val().trim() !== '' && $('#imageUploader').val() === '') {
+          var filePath = $('#imageUrl').val().trim();
+          var fileFormat = filePath.substring(filePath.lastIndexOf(".")).toLowerCase();
+          var src = filePath;
+          if (!fileFormat.match(/.png|.jpg|.jpeg|.gif|.mp4|.avi|.mov/)) {
+            $('#unspportFormat').modal();
+            return;
+          }
+          $('#cardBody').addClass("d-none");
+          if (fileFormat.match(/.mp4|.avi|.mov/)) {
+            $('#photoFrame').addClass("d-none");
+            $('#videoFrame').attr('src', src);
+            $('#videoFrame').removeClass("d-none");
+          } else {
+            $('#videoFrame').addClass("d-none");
+            $('#photoFrame').attr('src', src);
+            $('#photoFrame').removeClass("d-none");
+          }
+        }
+
         window.isDoing = true;
         var formData = new FormData(this);
         $('#cardBody').removeClass("d-none");
@@ -192,26 +213,6 @@
             window.isDoing = false;
           }
         });
-
-        if ($('#imageUrl').val().trim() !== '') {
-          var filePath = $('#imageUrl').val().trim();
-          var fileFormat = filePath.substring(filePath.lastIndexOf(".")).toLowerCase();
-          var src = filePath;
-          if (!fileFormat.match(/.png|.jpg|.jpeg|.gif|.mp4|.avi|.mov/)) {
-            $('#unspportFormat').modal();
-            return;
-          }
-          $('#cardBody').addClass("d-none");
-          if (fileFormat.match(/.mp4|.avi|.mov/)) {
-            $('#photoFrame').addClass("d-none");
-            $('#videoFrame').attr('src', src);
-            $('#videoFrame').removeClass("d-none");
-          } else {
-            $('#videoFrame').addClass("d-none");
-            $('#photoFrame').attr('src', src);
-            $('#photoFrame').removeClass("d-none");
-          }
-        }
       }));
     });
   </script>
