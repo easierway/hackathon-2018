@@ -11,6 +11,11 @@ from mimetypes import guess_extension
 from os.path import basename, join as pjoin, dirname, realpath, splitext
 from werkzeug.utils import secure_filename
 
+import colorlog
+from keras import optimizers
+from wukong.computer_vision.TransferLearning import WuKongVisionModel
+
+
 # constants
 dir_path = dirname(realpath(__file__))
 UPLOAD_IMAGE_FOLDER = pjoin(dir_path, 'upload_image')
@@ -25,6 +30,32 @@ logging.basicConfig(level=logging.DEBUG,
                     filename=None,
                     filemode='w')
 
+models = []
+
+
+def init_model():
+    weights = [
+        ("700", "/home/ec2-user/src/wukong/tmp/douyin_700.top_weights.best.hdf5"),
+        ("672", "/home/ec2-user/src/wukong/tmp/douyin_672.combined_model_weightsacc0.921_val_acc0.993.best.hdf5"),
+        ("448", "/home/ec2-user/src/wukong/tmp/douyin_448.combined_model_weightsacc0.90_val_acc0.99.best.hdf5"),
+        ("300", "/home/ec2-user/src/wukong/tmp/douyin_300.combined_model_weightsacc0.85_val_acc0.96.best.hdf5"),
+        ("224", "/home/ec2-user/src/wukong/tmp/douyin_224.combined_model_weightsacc0.83_val_acc0.92.best.hdf5"),
+    ]
+    for size, weight in weights:
+        model = WuKongVisionModel(size, size)
+        model.load_weights(weight)
+        models.append(model)
+
+
+def predict(image):
+    for model in models:
+        possibilty = model.predict(image)[0]
+        logging.info(
+            "predict [{}], possibility [{}]".format(image, possibilty))
+        if possibilty < 0.5:
+            return True
+    return False
+
 
 def download(url, output="./upload_image"):
     try:
@@ -33,7 +64,7 @@ def download(url, output="./upload_image"):
         tempname = str(uuid.uuid4()) + extension
         tempfile = pjoin(output, tempname)
 
-        with open(tempfile,'wb') as output:
+        with open(tempfile, 'wb') as output:
             output.write(dlfile.read())
         logging.info("download %r to %r", url, tempfile)
         return tempfile
@@ -73,29 +104,11 @@ def pick_frame(inPath, outPath, num=5):
             logging.info("pick frame save %r", frame_save_path)
 
     if len(frame_list) > 1:
-        # skip 1st frame
         frame_list.pop(0)
 
     return frame_list
 
 
-def wukong_check(filepath):
-    weights = []
-    weights.append(("700", "/home/ec2-user/src/wukong/tmp/douyin_700.top_weights.best.hdf5"))
-    weights.append(("672", "/home/ec2-user/src/wukong/tmp/douyin_672.combined_model_weightsacc0.921_val_acc0.993.best.hdf5"))
-    weights.append(("448", "/home/ec2-user/src/wukong/tmp/douyin_448.combined_model_weightsacc0.90_val_acc0.99.best.hdf5"))
-    weights.append(("300", "/home/ec2-user/src/wukong/tmp/douyin_300.combined_model_weightsacc0.85_val_acc0.96.best.hdf5"))
-    weights.append(("224", "/home/ec2-user/src/wukong/tmp/douyin_224.combined_model_weightsacc0.83_val_acc0.92.best.hdf5"))
-
-    for size, weight in weights:
-        predict = subprocess.call(['python', 'wukong_check.py', '-p', filepath, '-w', weight, '-s', size])
-        logging.info("predict frame %r = %r,size = %r", predict, filepath, size)
-        if predict == 0:
-            return True
-    return False
-
-
-# flask
 app = Flask(__name__)
 
 
@@ -110,40 +123,43 @@ def recognition():
     logging.debug("imageurl %r", imageurl)
     if 'file' not in request.files and not imageurl:
         flash('No file part')
-        return redirect(request.url)
+        return json.dumps({"status": 1, "message": "you should specific at least one of image or url"})
 
-    predict = False
-    if imageurl:
-        dlfile = download(url=imageurl, output=UPLOAD_IMAGE_FOLDER)
-        if dlfile is None or not allowed_file(basename(dlfile)):
-            return redirect(request.url)
-        predict = wukong_check(dlfile)
-    else:
-        file = request.files['file']
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            # video
-            if is_video(filename):
-                upload_save_path = pjoin(UPLOAD_VIDEO_FOLDER, filename)
-                file.save(upload_save_path)
-                logging.debug("video save %r", upload_save_path)
-                frames = pick_frame(upload_save_path, UPLOAD_IMAGE_FOLDER)
-                for f in frames:
-                    predict = wukong_check(f)
-                    if predict is True:
-                        break
-            else:
-                upload_save_path = pjoin(UPLOAD_IMAGE_FOLDER, filename)
-                file.save(upload_save_path)
-                logging.debug("image save %r", upload_save_path)
-                predict = wukong_check(upload_save_path)
+    try:
+        predictResult = False
+        if imageurl:
+            dlfile = download(url=imageurl, output=UPLOAD_IMAGE_FOLDER)
+            if dlfile is None or not allowed_file(basename(dlfile)):
+                return json.dumps({"status": 2, "message": "not allow file format"})
+            predictResult = predict(dlfile)
+        else:
+            file = request.files['file']
+            if file.filename == '':
+                return json.dumps({"status": 3, "message": "no selected file"})
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                # video
+                if is_video(filename):
+                    upload_save_path = pjoin(UPLOAD_VIDEO_FOLDER, filename)
+                    file.save(upload_save_path)
+                    logging.debug("video save %r", upload_save_path)
+                    frames = pick_frame(upload_save_path, UPLOAD_IMAGE_FOLDER)
+                    for f in frames:
+                        predictResult = predict(f)
+                        if predictResult is True:
+                            break
+                else:
+                    upload_save_path = pjoin(UPLOAD_IMAGE_FOLDER, filename)
+                    file.save(upload_save_path)
+                    logging.debug("image save %r", upload_save_path)
+                    predictResult = predict(upload_save_path)
+    except Exception as e:
+        logging.warn(e)
+        return json.dumps({"status": 4, "message": "server interval error"})
 
     return json.dumps({
         "status": 0,
-        "recognition": predict is True
+        "recognition": predictResult is True
     })
 
 
@@ -158,5 +174,5 @@ def after_request(response):
 
 
 if __name__ == '__main__':
+    init_model()
     app.run(host='0.0.0.0', port=5000)
-
