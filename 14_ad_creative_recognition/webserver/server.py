@@ -154,7 +154,7 @@ def recognition():
                     logging.debug("image save %r", upload_save_path)
                     predictResult = predict(upload_save_path)
     except Exception as e:
-        logging.warn(e)
+        logging.exception(e)
         return json.dumps({"status": 4, "message": "server interval error"})
 
     return json.dumps({
