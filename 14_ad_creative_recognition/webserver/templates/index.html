@@ -59,7 +59,7 @@
     </div>
 
     <div class="row h-50 align-items-center justify-content-center">
-      <div class="col-md-6 col-6">
+      <div class="col-md-6 col-10">
         <div class="card text-center">
           <div class="card-body d-none" id="cardBody">
             <h4 class="card-title" id="result">UNKNOWN</h4>
@@ -101,6 +101,7 @@
       materialKit.initFormExtendedDatetimepickers();
       materialKit.initSliders();
     });
+    window.isDoing = false;
 
     $(document).ready(function () {
       $('#imageUploader').on('change', function () {
@@ -130,6 +131,17 @@
 
       $('#recognitionForm').on('submit', (function (e) {
         e.preventDefault();
+        if ($('#imageUrl').val() === '' && $('#imageUploader').val() == '') {
+          $('#modalBody').html("<p>it seems that you forgot upload image</p>")
+          $('#modal').modal();
+          return;
+        }
+        if (window.isDoing) {
+          $('#modalBody').html("<p>current recognition is doing. please wait done...</p>")
+          $('#modal').modal();
+          return;
+        }
+        window.isDoing = true;
         var formData = new FormData(this);
         $('#cardBody').removeClass("d-none");
         var tid = setInterval(function () {
@@ -161,6 +173,7 @@
               $('.card').removeClass("bg-success");
               $('.card').addClass("bg-danger");
             }
+            window.isDoing = false;
           },
           error: function (jqXHR, textStatus, errorThrown) {
             $('#modalBody').html("server error: [" + errorThrown + "]");
@@ -170,6 +183,7 @@
             $('.card').removeClass("bg-success");
             $('.card').removeClass("bg-danger");
             $('.card').addClass("bg-warning");
+            window.isDoing = false;
           }
         });
 
