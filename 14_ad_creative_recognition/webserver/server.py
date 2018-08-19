@@ -49,11 +49,15 @@ def init_model():
 
 def predict(image):
     for model in models:
-        possibilty = model.predict(image)[0]
-        logging.info(
-            "predict [{}], possibility [{}]".format(image, possibilty))
-        if possibilty < 0.5:
-            return True
+        try:
+            possibilty = model.predict(image)[0]
+            logging.info(
+                "predict [{}], possibility [{}]".format(image, possibilty))
+            if possibilty < 0.5:
+                return True
+        except Exception as e:
+            logging.exception(e)
+            continue
     return False
 
 
