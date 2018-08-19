@@ -131,13 +131,13 @@
 
       $('#recognitionForm').on('submit', (function (e) {
         e.preventDefault();
-        if ($('#imageUrl').val() === '' && $('#imageUploader').val() == '') {
-          $('#modalBody').html("<p>it seems that you forgot upload image</p>")
+        if (window.isDoing) {
+          $('#modalBody').html("<p>current recognition is doing. please wait done...</p>")
           $('#modal').modal();
           return;
         }
-        if (window.isDoing) {
-          $('#modalBody').html("<p>current recognition is doing. please wait done...</p>")
+        if ($('#imageUrl').val() === '' && $('#imageUploader').val() == '') {
+          $('#modalBody').html("<p>it seems that you forgot upload image</p>")
           $('#modal').modal();
           return;
         }
