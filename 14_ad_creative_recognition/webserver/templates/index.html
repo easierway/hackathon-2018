@@ -159,6 +159,8 @@
             if (data["status"] != 0) {
               $('#modalBody').html("server status[" + data["status"] + "] is not ok. message: [" + data["message"] + "]");
               $('#modal').modal();
+              clearInterval(tid);
+              window.isDoing = false;
               return;
             }
             clearInterval(tid);
