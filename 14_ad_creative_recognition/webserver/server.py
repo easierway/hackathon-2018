@@ -1,19 +1,22 @@
 import cv2
+import json
 import logging
 import os
 import subprocess
 import sys
+import urllib2
+import uuid
 from flask import Flask, flash, request, redirect, url_for, send_from_directory, render_template
+from mimetypes import guess_extension
 from os.path import basename, join as pjoin, dirname, realpath, splitext
 from werkzeug.utils import secure_filename
-import json
 
 # constants
 dir_path = dirname(realpath(__file__))
 UPLOAD_IMAGE_FOLDER = pjoin(dir_path, 'upload_image')
 UPLOAD_VIDEO_FOLDER = pjoin(dir_path, 'upload_video')
 TRAIN_IMAGE_FOLDER = pjoin(dir_path, 'train_image')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'avi', 'mov'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'avi', 'mov', 'jpe'}
 
 # logging
 logging.basicConfig(level=logging.DEBUG,
@@ -22,26 +25,21 @@ logging.basicConfig(level=logging.DEBUG,
                     filename=None,
                     filemode='w')
 
-# flask
-app = Flask(__name__)
 
+def download(url, output="./upload_image"):
+    try:
+        dlfile = urllib2.urlopen(url)
+        extension = guess_extension(dlfile.info()['Content-Type'])
+        tempname = str(uuid.uuid4()) + extension
+        tempfile = pjoin(output, tempname)
 
-# wukong
-class WuKong:
-    def __init__(self, size, weight):
-        self.wukong_dir = ""
-        self.model = WuKongVisionModel(size, size)
-        self.model.load_weights(weight)
-
-    def train(self):
-        '''train a model with the default configuration'''
-        self.model.train_for_new_task(
-            self.work_dir, self.task_name, self.train_data_dir, self.test_data_dir)
-
-    def predict(self, filepath):
-        '''predict by the trained model'''
-        ret = self.model.predict(filepath)
-        return ret
+        with open(tempfile,'wb') as output:
+            output.write(dlfile.read())
+        logging.info("download %r to %r", url, tempfile)
+        return tempfile
+    except Exception as exc:
+        logging.error("download exception %s", exc)
+        return None
 
 
 def allowed_file(filename):
@@ -81,6 +79,26 @@ def pick_frame(inPath, outPath, num=5):
     return frame_list
 
 
+def wukong_check(filepath):
+    weights = []
+    weights.append(("700", "/home/ec2-user/src/wukong/tmp/douyin_700.top_weights.best.hdf5"))
+    weights.append(("672", "/home/ec2-user/src/wukong/tmp/douyin_672.combined_model_weightsacc0.921_val_acc0.993.best.hdf5"))
+    weights.append(("448", "/home/ec2-user/src/wukong/tmp/douyin_448.combined_model_weightsacc0.90_val_acc0.99.best.hdf5"))
+    weights.append(("300", "/home/ec2-user/src/wukong/tmp/douyin_300.combined_model_weightsacc0.85_val_acc0.96.best.hdf5"))
+    weights.append(("224", "/home/ec2-user/src/wukong/tmp/douyin_224.combined_model_weightsacc0.83_val_acc0.92.best.hdf5"))
+
+    for size, weight in weights:
+        predict = subprocess.call(['python', 'wukong_check.py', '-p', filepath, '-w', weight, '-s', size])
+        logging.info("predict frame %r = %r,size = %r", predict, filepath, size)
+        if predict == 0:
+            return True
+    return False
+
+
+# flask
+app = Flask(__name__)
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -88,100 +106,44 @@ def index():
 
 @app.route('/recognition', methods=['POST'])
 def recognition():
-    print(request.form["imageUrl"])
-    if 'file' not in request.files:
+    imageurl = request.form["imageUrl"]
+    logging.debug("imageurl %r", imageurl)
+    if 'file' not in request.files and not imageurl:
         flash('No file part')
         return redirect(request.url)
-    file = request.files['file']
-    if file.filename == '':
-        flash('No selected file')
-        return redirect(request.url)
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        predict = -1
-        # video
-        size_700 = "700"
-        size_672 = "672"
-        size_448 = "448"
-        size_300 = "300"
-        size_224 = "224"
-        weight_700 = "/home/ec2-user/src/wukong/tmp/douyin_700.top_weights.best.hdf5"
-        weight_672 = "/home/ec2-user/src/wukong/tmp/douyin_672.combined_model_weightsacc0.921_val_acc0.993.best.hdf5"
-        weight_448 = "/home/ec2-user/src/wukong/tmp/douyin_448.combined_model_weightsacc0.90_val_acc0.99.best.hdf5"
-        weight_300 = "/home/ec2-user/src/wukong/tmp/douyin_300.combined_model_weightsacc0.85_val_acc0.96.best.hdf5"
-        weight_224 = "/home/ec2-user/src/wukong/tmp/douyin_224.combined_model_weightsacc0.83_val_acc0.92.best.hdf5"
-        if is_video(filename):
-            upload_save_path = pjoin(UPLOAD_VIDEO_FOLDER, filename)
-            file.save(pjoin(upload_save_path))
-            logging.debug("video save %r", upload_save_path)
-            frames = pick_frame(upload_save_path, UPLOAD_IMAGE_FOLDER)
-            for f in frames:
-                filename = basename(f)
-                # predict = subprocess.call(['python', 'wukong_check.py', '-p', f]) # -w 672 -s 672
-                predict = subprocess.call(
-                    ['python', 'wukong_check.py', '-p', f, '-w', weight_672, '-s', size_672])
-                logging.info("predict frame %s = %r,size = %r",
-                             predict, f, size_672)
-                if predict == 0:
-                    break
-                predict = subprocess.call(
-                    ['python', 'wukong_check.py', '-p', f, '-w', weight_700, '-s', size_700])
-                logging.info("predict frame %s = %r,size = %r",
-                             predict, f, size_700)
-                if predict == 0:
-                    break
-                predict = subprocess.call(
-                    ['python', 'wukong_check.py', '-p', f, '-w', weight_448, '-s', size_448])
-                logging.info("predict frame %s = %r,size = %r",
-                             predict, f, size_448)
-                if predict == 0:
-                    break
-                predict = subprocess.call(
-                    ['python', 'wukong_check.py', '-p', f, '-w', weight_300, '-s', size_300])
-                logging.info("predict frame %s = %r,size = %r",
-                             predict, f, size_300)
-                if predict == 0:
-                    break
-                predict = subprocess.call(
-                    ['python', 'wukong_check.py', '-p', f, '-w', weight_224, '-s', size_224])
-                logging.info("predict frame %s = %r,size = %r",
-                             predict, f, size_300)
-                if predict == 0:
-                    break
-        else:
-            upload_save_path = pjoin(UPLOAD_IMAGE_FOLDER, filename)
-            file.save(upload_save_path)
-            logging.debug("image save %r", upload_save_path)
-            # predict = app.wukong.predict(upload_save_path)
-            # predict = subprocess.call(['python', 'wukong_check.py', '-p', upload_save_path]) # -w 226 -s 226
-            #logging.info("predict image %s = %r", predict, upload_save_path)
-            predict = subprocess.call(
-                ['python', 'wukong_check.py', '-p', upload_save_path, '-w', weight_672, '-s', size_672])
-            logging.info("predict frame %s = %r,size = %r",
-                         predict, upload_save_path, size_672)
-            if predict != 0:
-                predict = subprocess.call(
-                    ['python', 'wukong_check.py', '-p', upload_save_path, '-w', weight_700, '-s', size_700])
-                logging.info("predict frame %s = %r,size = %r",
-                             predict, upload_save_path, size_700)
-            if predict != 0:
-                predict = subprocess.call(
-                    ['python', 'wukong_check.py', '-p', upload_save_path, '-w', weight_448, '-s', size_448])
-                logging.info("predict frame %s = %r,size = %r",
-                             predict, upload_save_path, size_448)
-            if predict != 0:
-                predict = subprocess.call(
-                    ['python', 'wukong_check.py', '-p', upload_save_path, '-w', weight_300, '-s', size_300])
-                logging.info("predict frame %s = %r,size = %r",
-                             predict, upload_save_path, size_300)
-            if predict != 0:
-                predict = subprocess.call(
-                    ['python', 'wukong_check.py', '-p', upload_save_path, '-w', weight_224, '-s', size_224])
-                logging.info("predict frame %s = %r,size = %r",
-                             predict, upload_save_path, size_224)
+
+    predict = False
+    if imageurl:
+        dlfile = download(url=imageurl, output=UPLOAD_IMAGE_FOLDER)
+        if dlfile is None or not allowed_file(basename(dlfile)):
+            return redirect(request.url)
+        predict = wukong_check(dlfile)
+    else:
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            # video
+            if is_video(filename):
+                upload_save_path = pjoin(UPLOAD_VIDEO_FOLDER, filename)
+                file.save(upload_save_path)
+                logging.debug("video save %r", upload_save_path)
+                frames = pick_frame(upload_save_path, UPLOAD_IMAGE_FOLDER)
+                for f in frames:
+                    predict = wukong_check(f)
+                    if predict is True:
+                        break
+            else:
+                upload_save_path = pjoin(UPLOAD_IMAGE_FOLDER, filename)
+                file.save(upload_save_path)
+                logging.debug("image save %r", upload_save_path)
+                predict = wukong_check(upload_save_path)
+
     return json.dumps({
         "status": 0,
-        "recognition": predict == 0
+        "recognition": predict is True
     })
 
 
@@ -196,8 +158,5 @@ def after_request(response):
 
 
 if __name__ == '__main__':
-    #size = 224
-    #weight = '/home/ec2-user/src/wukong/tmp/douyin_448.combined_model_weightsacc0.90_val_acc0.99.best.hdf5'
-    #wukong = WuKong(size, weight)
-    #app.wukong = wukong
     app.run(host='0.0.0.0', port=5000)
+
