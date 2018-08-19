@@ -163,12 +163,12 @@
             }
             clearInterval(tid);
             if (data["recognition"]) {
-              $('#result').text("PASS");
+              $('#result').text("YES");
               $('.card').removeClass("bg-danger");
               $('.card').removeClass("bg-warning");
               $('.card').addClass("bg-success");
             } else {
-              $('#result').text("FAIL");
+              $('#result').text("NO");
               $('.card').removeClass("bg-warning");
               $('.card').removeClass("bg-success");
               $('.card').addClass("bg-danger");
